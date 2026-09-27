@@ -1,0 +1,19 @@
+# Dependências (serão reinstaladas no container)
+node_modules/
+# Controle de versão
+.git/
+.gitignore
+# Arquivos de ambiente
+.env
+.env.local
+# Logs
+*.log
+# Arquivos do Docker
+Dockerfile
+.dockerignore
+# IDE
+.vscode/
+.idea/
+# Sistema
+.DS_Store
+Thumbs.db

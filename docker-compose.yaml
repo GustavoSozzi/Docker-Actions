@@ -1,0 +1,64 @@
+services: # definição dos containers que farão parte da aplicação
+  api-dev:
+    build: .
+    ports:
+      - "3000:3000" # PORTA_DO_HOST : PORTA_DO_CONTAINER
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    profiles:
+      - dev
+
+  api-prod:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=production
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - prod
+
+  db: # Serviço do banco de dados
+    image: postgres:16-alpine # Imagem do docker hup
+    ports:
+    - "5432:5432" # Expoe PostgreSQL no host (opcional)
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+    healthcheck: # Novo bloco
+      test: ["CMD-SHELL", "pg_isready -U postgres"] # Comando de verificação
+      interval: 5s
+      timeout: 3s #Timeout de 3s para executar
+      retries: 5 # 5 falhas seguidas = unhealthy
+      start_period: 10s # Periodo de graça antes de começar a contar falhas
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro # monta o volume pgdata no diretorio onde o PostgreSQL armazena dados.
+  registry:
+    image: registry:2
+    ports:
+      - "5001:5000" # PORTA_DO_HOST : PORTA_DO_CONTAINER
+    volumes:
+      - registry-data:/var/lib/registry
+      
+      
+volumes: # declara o volume no nivel raiz
+  pgdata: # nome do volum
+  registry-data: # Registry Data
